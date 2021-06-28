@@ -1,7 +1,5 @@
 const express = require("express");
-const { conflicts } = require("yargs");
 const Campsite = require("../models/campsite.js");
-const campsite = require("../models/campsite.js");
 
 const campsiteRouter = express.Router();
 
