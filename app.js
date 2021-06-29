@@ -3,6 +3,8 @@ var express = require("express");
 var path = require("path");
 var cookieParser = require("cookie-parser");
 var logger = require("morgan");
+const session = require("express-session");
+const FileStore = require("session-file-store")(session);
 
 var indexRouter = require("./routes/index");
 var usersRouter = require("./routes/users");
@@ -31,10 +33,24 @@ app.set("view engine", "jade");
 app.use(logger("dev"));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
-app.use(cookieParser("12345-67890-09876-54321"));
+//app.use(cookieParser("12345-67890-09876-54321")); Commented out to use Express Sessions
+
+app.use(
+  session({
+    name: "session-id", // Can put anything here
+    secret: "12345-67890-09876-54321",
+    saveUninitialized: false, // When a new session is created but no updates are made, no save will be made
+    resave: false, // Once a session is created, updated, and saved, it will continue to be resaved whenever a
+    //request is made for that session, even if that request didn't make any updates
+    store: new FileStore(),
+  })
+);
 
 function auth(req, res, next) {
-  if (!req.signedCookies.user) {
+  console.log(req.session);
+
+  //if (!req.signedCookies.user) {  ---- Replaced for Express Sessions
+  if (!req.session.user) {
     const authHeader = req.headers.authorization;
     if (!authHeader) {
       const err = new Error("You are not authenticated.");
@@ -49,7 +65,8 @@ function auth(req, res, next) {
     const user = auth[0];
     const pass = auth[1];
     if (user === "admin" && pass === "password") {
-      res.cookie("user", "admin", { signed: true });
+      //res.cookie("user", "admin", { signed: true });  --- Replaced for Express Sessions
+      req.session.user = "admin";
       return next(); // authorized
     } else {
       const err = new Error("You are not authorized.");
@@ -58,7 +75,8 @@ function auth(req, res, next) {
       return next(err);
     }
   } else {
-    if (req.signedCookies.user === "admin") {
+    //if (req.signedCookies.user === "admin") { ---- Replaced for Express Sessions
+    if (req.session.user === "admin") {
       return next();
     } else {
       const err = new Error("You are not authorized.");
