@@ -1,4 +1,5 @@
 const express = require("express");
+const passport = require("passport");
 const User = require("../models/user");
 
 const router = express.Router();
@@ -8,7 +9,27 @@ router.get("/", function (req, res, next) {
   res.send("respond with a resource");
 });
 
-router.post("/signup", (req, res, next) => {
+router.post("/signup", (req, res) => {
+  User.register(
+    new User({ username: req.body.username }),
+    req.body.password,
+    (err) => {
+      if (err) {
+        res.statusCode = 500;
+        res.setHeader("Content-Type", "application/json");
+        res.json({ err: err });
+      } else {
+        passport.authenticate("local")(req, res, () => {
+          res.statusCode = 200;
+          res.setHeader("Content-Type", "application/json");
+          res.json({ success: true, status: "Registration Successful!" });
+        });
+      }
+    }
+  );
+});
+/* This code is for manually checking and adding new users. Removed to use passport.
+
   User.findOne({ username: req.body.username })
     .then((user) => {
       if (user) {
@@ -31,7 +52,16 @@ router.post("/signup", (req, res, next) => {
     .catch((err) => next(err));
 });
 
-router.post("/login", (req, res, next) => {
+*/
+
+router.post("/login", (req, res) => {
+  res.statusCode = 200;
+  res.setHeader("Content-Type", "application/json");
+  res.json({ success: true, status: "You are logged in" });
+});
+
+/* Removed to authenticate with Passport
+  
   if (!req.session.user) {
     const authHeader = req.headers.authorization;
 
@@ -72,6 +102,8 @@ router.post("/login", (req, res, next) => {
     res.end("You are already authenticated!");
   }
 });
+
+*/
 
 router.get("/logout", (req, res, next) => {
   if (req.session) {
